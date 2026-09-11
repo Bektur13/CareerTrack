@@ -1,10 +1,9 @@
 import type { ApplicationStage, JobApplication } from "@/components/kanban/board";
 
-// The Express API (Kanban board's CRUD) — separate origin from the Next.js
-// app, same as the extension's CTK_DEFAULT_API_BASE. Auth rides on the Clerk
-// session cookie: cookies aren't port-scoped, and Express's CORS config
-// already allows credentialed requests from http://localhost:3000.
-const EXPRESS_API_BASE = "http://localhost:3001";
+// Same-origin Next.js Route Handlers (/api/applications/*). These run under
+// the Clerk session cookie automatically — no cross-origin, no CORS, and no
+// dependency on the Express server (which stays only for the extension's
+// API-key auth). See src/app/api/applications/.
 
 interface ApiCompany {
   id: string;
@@ -49,9 +48,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
 }
 
 export async function fetchApplications(): Promise<JobApplication[]> {
-  const res = await fetch(`${EXPRESS_API_BASE}/applications?pageSize=100`, {
-    credentials: "include",
-  });
+  const res = await fetch("/api/applications");
   const body = await handleResponse<{ data: ApiJobApplication[] }>(res);
   return body.data.map(mapApplication);
 }
@@ -63,9 +60,8 @@ export async function createApplication(input: {
   salaryRange?: string;
   description?: string;
 }): Promise<JobApplication> {
-  const res = await fetch(`${EXPRESS_API_BASE}/applications`, {
+  const res = await fetch("/api/applications", {
     method: "POST",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       role: input.jobTitle,
@@ -79,9 +75,8 @@ export async function createApplication(input: {
 }
 
 export async function updateApplicationStage(id: string, stage: ApplicationStage): Promise<JobApplication> {
-  const res = await fetch(`${EXPRESS_API_BASE}/applications/${id}/stage`, {
+  const res = await fetch(`/api/applications/${id}/stage`, {
     method: "PATCH",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ stage }),
   });

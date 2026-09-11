@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { KanbanBoard, JobApplication, ApplicationStage } from "@/components/kanban/board";
 import { ApplicationDetailDrawer } from "@/components/ApplicationDrawer";
 import { AddApplicationDialog } from "@/components/AddApplicationDialog";
-import { fetchApplications, updateApplicationStage } from "@/lib/expressApi";
+import { fetchApplications, updateApplicationStage } from "@/lib/applicationsApi";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

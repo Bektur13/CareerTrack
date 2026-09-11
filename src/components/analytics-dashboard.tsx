@@ -13,7 +13,7 @@ import {
   Area,
 } from "recharts";
 import { TrendingUp, TrendingDown, Target, CheckCircle2, Loader2 } from "lucide-react";
-import { fetchApplications } from "@/lib/expressApi";
+import { fetchApplications } from "@/lib/applicationsApi";
 import type { ApplicationStage, JobApplication } from "@/components/kanban/board";
 
 const FUNNEL_STAGES: { id: ApplicationStage; label: string }[] = [

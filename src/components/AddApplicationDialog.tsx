@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import type { JobApplication } from "@/components/kanban/board";
-import { createApplication } from "@/lib/expressApi";
+import { createApplication } from "@/lib/applicationsApi";
 
 interface AddApplicationDialogProps {
   open: boolean;
