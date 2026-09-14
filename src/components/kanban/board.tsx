@@ -23,9 +23,16 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, MapPin, AlertCircle, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Building2, MapPin, Sparkles, MoreVertical, Trash2 } from "lucide-react";
 
 export type ApplicationStage = "APPLIED" | "SCREENING" | "TECHNICAL" | "OFFER" | "REJECTED";
 
@@ -70,9 +77,16 @@ interface BoardProps {
   onApplicationsChange: (applications: JobApplication[]) => void;
   onApplicationSelect: (app: JobApplication) => void;
   onStageChange: (appId: string, newStage: ApplicationStage) => void;
+  onDeleteRequest: (app: JobApplication) => void;
 }
 
-export function KanbanBoard({ applications, onApplicationsChange, onApplicationSelect, onStageChange }: BoardProps) {
+export function KanbanBoard({
+  applications,
+  onApplicationsChange,
+  onApplicationSelect,
+  onStageChange,
+  onDeleteRequest,
+}: BoardProps) {
   const [activeApp, setActiveApp] = useState<JobApplication | null>(null);
 
   const sensors = useSensors(
@@ -144,11 +158,12 @@ export function KanbanBoard({ applications, onApplicationsChange, onApplicationS
         {STAGES.map((stage) => {
           const stageApps = applications.filter((app) => app.stage === stage.id);
           return (
-            <KanbanColumn 
+            <KanbanColumn
               key={stage.id}
               stage={stage}
               applications={stageApps}
               onSelect={onApplicationSelect}
+              onDeleteRequest={onDeleteRequest}
             />
           );
         })}
@@ -165,10 +180,12 @@ function KanbanColumn({
   stage,
   applications,
   onSelect,
+  onDeleteRequest,
 }: {
   stage: { id: ApplicationStage; label: string; color: string };
   applications: JobApplication[];
   onSelect: (app: JobApplication) => void;
+  onDeleteRequest: (app: JobApplication) => void;
 }) {
   const { setNodeRef } = useDroppable({ id: stage.id });
 
@@ -186,7 +203,7 @@ function KanbanColumn({
       <SortableContext items={applications.map((a) => a.id)} strategy={verticalListSortingStrategy}>
         <div className="flex-1 overflow-y-auto flex flex-col gap-2.5 pr-1">
           {applications.map((app) => (
-            <SortableCard key={app.id} application={app} onSelect={onSelect} />
+            <SortableCard key={app.id} application={app} onSelect={onSelect} onDeleteRequest={onDeleteRequest} />
           ))}
         </div>
       </SortableContext>
@@ -194,7 +211,15 @@ function KanbanColumn({
   );
 }
 
-function SortableCard({ application, onSelect }: { application: JobApplication; onSelect: (app: JobApplication) => void }) {
+function SortableCard({
+  application,
+  onSelect,
+  onDeleteRequest,
+}: {
+  application: JobApplication;
+  onSelect: (app: JobApplication) => void;
+  onDeleteRequest: (app: JobApplication) => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: application.id });
 
   const style = {
@@ -205,12 +230,22 @@ function SortableCard({ application, onSelect }: { application: JobApplication; 
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <KanbanCard application={application} onClick={() => onSelect(application)} />
+      <KanbanCard application={application} onClick={() => onSelect(application)} onDeleteRequest={onDeleteRequest} />
     </div>
   );
 }
 
-function KanbanCard({ application, isDragging, onClick }: { application: JobApplication; isDragging?: boolean; onClick?: () => void }) {
+function KanbanCard({
+  application,
+  isDragging,
+  onClick,
+  onDeleteRequest,
+}: {
+  application: JobApplication;
+  isDragging?: boolean;
+  onClick?: () => void;
+  onDeleteRequest?: (app: JobApplication) => void;
+}) {
   return (
     <Card
       onClick={onClick}
@@ -220,19 +255,43 @@ function KanbanCard({ application, isDragging, onClick }: { application: JobAppl
     >
       <CardContent className="p-3.5 space-y-2">
         <div className="flex items-start justify-between gap-2">
-          <div>
+          <div className="min-w-0">
             <h4 className="font-semibold text-card-foreground text-sm leading-snug">{application.jobTitle}</h4>
             <div className="flex items-center gap-1.5 text-muted-foreground text-xs mt-0.5">
               <Building2 className="w-3.5 h-3.5" />
               <span>{application.companyName}</span>
             </div>
           </div>
-          {application.matchScore && (
-            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] gap-1 px-1.5 py-0.5">
-              <Sparkles className="w-2.5 h-2.5" />
-              {application.matchScore}%
-            </Badge>
-          )}
+          <div className="flex shrink-0 items-center gap-1">
+            {application.matchScore && (
+              <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] gap-1 px-1.5 py-0.5">
+                <Sparkles className="w-2.5 h-2.5" />
+                {application.matchScore}%
+              </Badge>
+            )}
+            {onDeleteRequest && (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      className="text-muted-foreground"
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label="Application actions"
+                    />
+                  }
+                >
+                  <MoreVertical className="size-3.5" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem variant="destructive" onClick={() => onDeleteRequest(application)}>
+                    <Trash2 /> Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center justify-between pt-1 text-[11px] text-muted-foreground">

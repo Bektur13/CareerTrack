@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { KanbanBoard, JobApplication, ApplicationStage } from "@/components/kanban/board";
 import { ApplicationDetailDrawer } from "@/components/ApplicationDrawer";
 import { AddApplicationDialog } from "@/components/AddApplicationDialog";
+import { DeleteApplicationDialog } from "@/components/DeleteApplicationDialog";
 import { StaleApplicationsBanner } from "@/components/StaleApplicationsBanner";
 import { fetchApplications, updateApplicationStage } from "@/lib/applicationsApi";
 import { Plus, Loader2 } from "lucide-react";
@@ -16,8 +17,10 @@ export default function DashboardPage() {
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const selectedApp = applications.find((app) => app.id === selectedAppId) ?? null;
+  const deleteTarget = applications.find((app) => app.id === deleteTargetId) ?? null;
 
   useEffect(() => {
     let cancelled = false;
@@ -61,6 +64,15 @@ export default function DashboardPage() {
     setApplications((prev) => prev.map((app) => (app.id === updated.id ? updated : app)));
   };
 
+  const handleDeleted = (id: string) => {
+    setApplications((prev) => prev.filter((app) => app.id !== id));
+    // Close the drawer too if the deleted application was the one open in it.
+    if (selectedAppId === id) {
+      setIsDrawerOpen(false);
+      setSelectedAppId(null);
+    }
+  };
+
   return (
     <div className="mx-auto flex w-full max-w-[2000px] flex-1 flex-col gap-4 bg-card p-4 text-card-foreground sm:p-6 lg:p-8">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -91,6 +103,7 @@ export default function DashboardPage() {
             onApplicationsChange={setApplications}
             onApplicationSelect={handleSelectApp}
             onStageChange={handleStageChange}
+            onDeleteRequest={(app) => setDeleteTargetId(app.id)}
           />
         </>
       )}
@@ -100,6 +113,7 @@ export default function DashboardPage() {
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         onUpdateApplication={handleUpdateApplication}
+        onDeleteRequest={(app) => setDeleteTargetId(app.id)}
       />
 
       <AddApplicationDialog
@@ -107,6 +121,13 @@ export default function DashboardPage() {
         onOpenChange={setIsAddOpen}
         onAdd={handleAddApplication}
         applications={applications}
+      />
+
+      <DeleteApplicationDialog
+        application={deleteTarget}
+        open={deleteTargetId !== null}
+        onOpenChange={(open) => !open && setDeleteTargetId(null)}
+        onDeleted={handleDeleted}
       />
     </div>
   );

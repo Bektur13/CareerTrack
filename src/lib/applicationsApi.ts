@@ -82,3 +82,13 @@ export async function updateApplicationStage(id: string, stage: ApplicationStage
   });
   return mapApplication(await handleResponse<ApiJobApplication>(res));
 }
+
+export async function deleteApplication(id: string): Promise<void> {
+  const res = await fetch(`/api/applications/${id}`, { method: "DELETE" });
+  // 204 No Content has no body — handleResponse's res.json() would throw
+  // on success here, so only route through it for the error case.
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Request failed (${res.status})`);
+  }
+}

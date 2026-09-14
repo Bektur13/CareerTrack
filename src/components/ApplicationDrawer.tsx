@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Building2, Calendar, DollarSign, Mail, MapPin, User, Send, Plus } from "lucide-react";
+import { Building2, Calendar, DollarSign, Mail, MapPin, User, Send, Plus, Trash2 } from "lucide-react";
 import { JobApplication, Contact, ApplicationNote } from "@/components/kanban/board";
 
 interface ApplicationDrawerProps {
@@ -20,9 +20,16 @@ interface ApplicationDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdateApplication: (application: JobApplication) => void;
+  onDeleteRequest: (application: JobApplication) => void;
 }
 
-export function ApplicationDetailDrawer({ application, isOpen, onClose, onUpdateApplication }: ApplicationDrawerProps) {
+export function ApplicationDetailDrawer({
+  application,
+  isOpen,
+  onClose,
+  onUpdateApplication,
+  onDeleteRequest,
+}: ApplicationDrawerProps) {
   const [newNote, setNewNote] = useState("");
   const [isAddingContact, setIsAddingContact] = useState(false);
   const [contactForm, setContactForm] = useState({ name: "", title: "", email: "" });
@@ -64,7 +71,18 @@ export function ApplicationDetailDrawer({ application, isOpen, onClose, onUpdate
             <Badge variant="outline" className="text-xs uppercase tracking-wider">
               {application.stage}
             </Badge>
-            <span className="text-xs text-muted-foreground">Updated {application.updatedAt}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Updated {application.updatedAt}</span>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => onDeleteRequest(application)}
+                aria-label="Delete application"
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
+            </div>
           </div>
           <SheetTitle className="text-xl text-card-foreground">{application.jobTitle}</SheetTitle>
           <SheetDescription className="text-muted-foreground flex items-center gap-4 text-sm">
