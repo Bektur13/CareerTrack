@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { KanbanBoard, JobApplication, ApplicationStage } from "@/components/kanban/board";
 import { ApplicationDetailDrawer } from "@/components/ApplicationDrawer";
 import { AddApplicationDialog } from "@/components/AddApplicationDialog";
+import { StaleApplicationsBanner } from "@/components/StaleApplicationsBanner";
 import { fetchApplications, updateApplicationStage } from "@/lib/applicationsApi";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,9 +17,6 @@ export default function DashboardPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
-  // Derived from `applications` (not a separate snapshot) so the open drawer
-  // always reflects the latest data — e.g. a note added here or a stage
-  // changed via drag-and-drop elsewhere never goes stale.
   const selectedApp = applications.find((app) => app.id === selectedAppId) ?? null;
 
   useEffect(() => {
@@ -51,9 +49,6 @@ export default function DashboardPage() {
       setApplications((prev) => prev.map((app) => (app.id === appId ? updated : app)));
     } catch (err) {
       console.error("Failed to update stage, resyncing from server:", err);
-      // The board already applied this optimistically during drag — on
-      // failure, refetch to fall back to whatever the server actually has
-      // rather than leaving the UI showing a stage change that didn't save.
       fetchApplications().then(setApplications).catch(() => {});
     }
   };
@@ -89,12 +84,15 @@ export default function DashboardPage() {
       )}
 
       {!isLoading && !loadError && (
-        <KanbanBoard
-          applications={applications}
-          onApplicationsChange={setApplications}
-          onApplicationSelect={handleSelectApp}
-          onStageChange={handleStageChange}
-        />
+        <>
+          <StaleApplicationsBanner applications={applications} onSelectApplication={handleSelectApp} />
+          <KanbanBoard
+            applications={applications}
+            onApplicationsChange={setApplications}
+            onApplicationSelect={handleSelectApp}
+            onStageChange={handleStageChange}
+          />
+        </>
       )}
 
       <ApplicationDetailDrawer
