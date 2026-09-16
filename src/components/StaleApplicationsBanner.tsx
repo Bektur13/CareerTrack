@@ -2,42 +2,36 @@
 
 import { AlertTriangle, Mail, ChevronRight } from "lucide-react";
 import type { JobApplication } from "@/components/kanban/board";
+import { daysSince } from "@/lib/dateUtils";
 
 // No scheduled job, no push/email service — this is purely a client-side
 // filter over data already on the page. Surfaces the moment the dashboard
 // is open; doesn't reach the user when the app is closed (that's the
 // "real infra" phase, deliberately deferred).
 const STALE_AFTER_DAYS = 10;
-
-function daysSince(dateString: string) {
-  const applied = new Date(dateString);
-  const now = new Date();
-  return Math.floor((now.getTime() - applied.getTime()) / (1000 * 60 * 60 * 24));
-}
-
-function buildFollowUpMailto(app: JobApplication, days: number) {
-  // Contacts only live in client-side state today (no backend Contact
-  // route yet), so this only has a real recipient if one was added this
-  // session — falls back to an empty "to" (still opens the mail client
-  // with subject/body prefilled, just needs an address typed in).
-  const contact = app.contacts?.find((c) => c.email);
-  const to = contact?.email ?? "";
-  const greeting = contact?.name ? `Hi ${contact.name.split(" ")[0]},` : "Hi,";
-  const subject = `Following up: ${app.jobTitle} application at ${app.companyName}`;
-  const body = `${greeting}\n\nI wanted to follow up on my application for the ${app.jobTitle} role at ${app.companyName}, submitted ${days} days ago. I remain very interested in the opportunity and would love to hear about next steps.\n\nBest,\n`;
-  return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-}
+// After a follow-up is sent (or dismissed via "Not now"), don't re-nag
+// about the same application until this many days have passed again.
+const FOLLOW_UP_COOLDOWN_DAYS = 7;
 
 interface StaleApplicationsBannerProps {
   applications: JobApplication[];
   onSelectApplication: (application: JobApplication) => void;
+  onFollowUpRequest: (application: JobApplication) => void;
 }
 
-export function StaleApplicationsBanner({ applications, onSelectApplication }: StaleApplicationsBannerProps) {
+export function StaleApplicationsBanner({
+  applications,
+  onSelectApplication,
+  onFollowUpRequest,
+}: StaleApplicationsBannerProps) {
   const stale = applications
     .filter((app) => app.stage === "APPLIED" && app.dateApplied)
     .map((app) => ({ app, days: daysSince(app.dateApplied!) }))
-    .filter(({ days }) => days >= STALE_AFTER_DAYS)
+    .filter(({ app, days }) => {
+      if (days < STALE_AFTER_DAYS) return false;
+      if (!app.lastFollowedUpAt) return true;
+      return daysSince(app.lastFollowedUpAt) >= FOLLOW_UP_COOLDOWN_DAYS;
+    })
     .sort((a, b) => b.days - a.days);
 
   if (stale.length === 0) return null;
@@ -69,12 +63,13 @@ export function StaleApplicationsBanner({ applications, onSelectApplication }: S
             </button>
             <div className="flex shrink-0 items-center gap-2">
               <span className="text-xs text-muted-foreground">{days}d ago</span>
-              <a
-                href={buildFollowUpMailto(app, days)}
+              <button
+                type="button"
+                onClick={() => onFollowUpRequest(app)}
                 className="inline-flex items-center gap-1 text-xs text-amber-600 hover:underline dark:text-amber-400"
               >
                 <Mail className="size-3" /> Follow up
-              </a>
+              </button>
             </div>
           </div>
         ))}

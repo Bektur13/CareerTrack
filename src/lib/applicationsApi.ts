@@ -26,6 +26,7 @@ interface ApiJobApplication {
   description: string | null;
   updatedAt: string;
   dateApplied: string;
+  lastFollowedUpAt: string | null;
   company: ApiCompany | null;
   contacts: ApiContact[];
 }
@@ -53,6 +54,7 @@ function mapApplication(api: ApiJobApplication): JobApplication {
     description: api.description ?? undefined,
     updatedAt: api.updatedAt.split("T")[0],
     dateApplied: api.dateApplied.split("T")[0],
+    lastFollowedUpAt: api.lastFollowedUpAt ?? undefined,
     contacts: api.contacts.map(mapContact),
   };
 }
@@ -98,6 +100,11 @@ export async function updateApplicationStage(id: string, stage: ApplicationStage
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ stage }),
   });
+  return mapApplication(await handleResponse<ApiJobApplication>(res));
+}
+
+export async function markFollowedUp(id: string): Promise<JobApplication> {
+  const res = await fetch(`/api/applications/${id}/follow-up`, { method: "PATCH" });
   return mapApplication(await handleResponse<ApiJobApplication>(res));
 }
 

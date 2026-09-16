@@ -6,6 +6,7 @@ import { ApplicationDetailDrawer } from "@/components/ApplicationDrawer";
 import { AddApplicationDialog } from "@/components/AddApplicationDialog";
 import { DeleteApplicationDialog } from "@/components/DeleteApplicationDialog";
 import { StaleApplicationsBanner } from "@/components/StaleApplicationsBanner";
+import { FollowUpDialog } from "@/components/FollowUpDialog";
 import { fetchApplications, updateApplicationStage } from "@/lib/applicationsApi";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,9 +19,11 @@ export default function DashboardPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [followUpTargetId, setFollowUpTargetId] = useState<string | null>(null);
 
   const selectedApp = applications.find((app) => app.id === selectedAppId) ?? null;
   const deleteTarget = applications.find((app) => app.id === deleteTargetId) ?? null;
+  const followUpTarget = applications.find((app) => app.id === followUpTargetId) ?? null;
 
   useEffect(() => {
     let cancelled = false;
@@ -97,7 +100,11 @@ export default function DashboardPage() {
 
       {!isLoading && !loadError && (
         <>
-          <StaleApplicationsBanner applications={applications} onSelectApplication={handleSelectApp} />
+          <StaleApplicationsBanner
+            applications={applications}
+            onSelectApplication={handleSelectApp}
+            onFollowUpRequest={(app) => setFollowUpTargetId(app.id)}
+          />
           <KanbanBoard
             applications={applications}
             onApplicationsChange={setApplications}
@@ -128,6 +135,14 @@ export default function DashboardPage() {
         open={deleteTargetId !== null}
         onOpenChange={(open) => !open && setDeleteTargetId(null)}
         onDeleted={handleDeleted}
+      />
+
+      <FollowUpDialog
+        application={followUpTarget}
+        open={followUpTargetId !== null}
+        onOpenChange={(open) => !open && setFollowUpTargetId(null)}
+        onFollowedUp={handleUpdateApplication}
+        onAddContact={handleSelectApp}
       />
     </div>
   );

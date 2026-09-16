@@ -62,6 +62,7 @@ export interface JobApplication {
   description?: string;
   contacts?: Contact[];
   notes?: ApplicationNote[];
+  lastFollowedUpAt?: string;
 }
 
 const STAGES: { id: ApplicationStage; label: string; color: string }[] = [
