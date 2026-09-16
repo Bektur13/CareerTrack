@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Building2, Calendar, DollarSign, Mail, MapPin, User, Send, Plus, Trash2 } from "lucide-react";
-import { JobApplication, Contact, ApplicationNote } from "@/components/kanban/board";
+import { JobApplication, ApplicationNote } from "@/components/kanban/board";
+import { createContact, deleteContact } from "@/lib/applicationsApi";
 
 interface ApplicationDrawerProps {
   application: JobApplication | null;
@@ -33,6 +34,9 @@ export function ApplicationDetailDrawer({
   const [newNote, setNewNote] = useState("");
   const [isAddingContact, setIsAddingContact] = useState(false);
   const [contactForm, setContactForm] = useState({ name: "", title: "", email: "" });
+  const [savingContact, setSavingContact] = useState(false);
+  const [contactError, setContactError] = useState<string | null>(null);
+  const [deletingContactId, setDeletingContactId] = useState<string | null>(null);
 
   if (!application) return null;
 
@@ -47,17 +51,40 @@ export function ApplicationDetailDrawer({
     setNewNote("");
   };
 
-  const handleAddContact = () => {
+  const handleAddContact = async () => {
     if (!contactForm.name.trim()) return;
-    const contact: Contact = {
-      id: crypto.randomUUID(),
-      name: contactForm.name.trim(),
-      title: contactForm.title.trim() || undefined,
-      email: contactForm.email.trim() || undefined,
-    };
-    onUpdateApplication({ ...application, contacts: [...(application.contacts ?? []), contact] });
-    setContactForm({ name: "", title: "", email: "" });
-    setIsAddingContact(false);
+    setSavingContact(true);
+    setContactError(null);
+
+    try {
+      const contact = await createContact(application.id, {
+        name: contactForm.name.trim(),
+        title: contactForm.title.trim() || undefined,
+        email: contactForm.email.trim() || undefined,
+      });
+      onUpdateApplication({ ...application, contacts: [...(application.contacts ?? []), contact] });
+      setContactForm({ name: "", title: "", email: "" });
+      setIsAddingContact(false);
+    } catch (err) {
+      setContactError(err instanceof Error ? err.message : "Unable to add contact");
+    } finally {
+      setSavingContact(false);
+    }
+  };
+
+  const handleDeleteContact = async (contactId: string) => {
+    setDeletingContactId(contactId);
+    try {
+      await deleteContact(application.id, contactId);
+      onUpdateApplication({
+        ...application,
+        contacts: (application.contacts ?? []).filter((c) => c.id !== contactId),
+      });
+    } catch (err) {
+      console.error("Failed to delete contact:", err);
+    } finally {
+      setDeletingContactId(null);
+    }
   };
 
   const contacts = application.contacts ?? [];
@@ -166,15 +193,20 @@ export function ApplicationDetailDrawer({
                   onChange={(e) => setContactForm((prev) => ({ ...prev, email: e.target.value }))}
                   className="text-sm"
                 />
+                {contactError && <p className="text-xs text-destructive">{contactError}</p>}
                 <div className="flex gap-2">
-                  <Button size="sm" className="h-7 text-xs" onClick={handleAddContact}>
-                    Save Contact
+                  <Button size="sm" className="h-7 text-xs" onClick={handleAddContact} disabled={savingContact}>
+                    {savingContact ? "Saving..." : "Save Contact"}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     className="h-7 text-xs"
-                    onClick={() => setIsAddingContact(false)}
+                    onClick={() => {
+                      setIsAddingContact(false);
+                      setContactError(null);
+                    }}
+                    disabled={savingContact}
                   >
                     Cancel
                   </Button>
@@ -196,15 +228,27 @@ export function ApplicationDetailDrawer({
                       {contact.title && <p className="text-xs text-muted-foreground">{contact.title}</p>}
                     </div>
                   </div>
-                  {contact.email && (
-                    <a
-                      href={`mailto:${contact.email}`}
-                      className="text-muted-foreground hover:text-blue-400"
-                      aria-label={`Email ${contact.name}`}
+                  <div className="flex items-center gap-1">
+                    {contact.email && (
+                      <a
+                        href={`mailto:${contact.email}`}
+                        className="text-muted-foreground hover:text-blue-400"
+                        aria-label={`Email ${contact.name}`}
+                      >
+                        <Mail className="w-4 h-4" />
+                      </a>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => handleDeleteContact(contact.id)}
+                      disabled={deletingContactId === contact.id}
+                      aria-label={`Delete ${contact.name}`}
                     >
-                      <Mail className="w-4 h-4" />
-                    </a>
-                  )}
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}

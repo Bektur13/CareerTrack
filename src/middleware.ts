@@ -1,17 +1,11 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 
-const isProtectedRoute = createRouteMatcher([
-  "/dashboard(.*)",
-  "/analytics(.*)",
-  "/settings(.*)",
-  "/extension/connect(/.*)?",
-]);
-
-export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) {
-    await auth.protect();
-  }
-});
+// No path-matching/protect() here anymore — route protection is
+// resource-based now (see src/app/(protected)/layout.tsx and
+// src/app/extension/connect/page.tsx). This middleware's only job is
+// making Clerk's auth context available to every request; auth() still
+// works in API routes and Server Components without it doing anything else.
+export default clerkMiddleware();
 
 export const config = {
   matcher: [

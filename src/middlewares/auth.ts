@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import type { User } from '../../generated/prisma/client';
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace -- `declare global { namespace Express {...} }` is the only way TS supports augmenting Express's own Request interface with a custom field.
     namespace Express {
         interface Request {
             dbUser?: User;

@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const application = await prisma.jobApplication.update({
     where: { id },
     data: { stage },
-    include: { company: true },
+    include: { company: true, contacts: true },
   });
 
   return NextResponse.json(application);

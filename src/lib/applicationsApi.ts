@@ -1,4 +1,4 @@
-import type { ApplicationStage, JobApplication } from "@/components/kanban/board";
+import type { ApplicationStage, Contact, JobApplication } from "@/components/kanban/board";
 
 // Same-origin Next.js Route Handlers (/api/applications/*). These run under
 // the Clerk session cookie automatically — no cross-origin, no CORS, and no
@@ -8,6 +8,13 @@ import type { ApplicationStage, JobApplication } from "@/components/kanban/board
 interface ApiCompany {
   id: string;
   name: string;
+}
+
+interface ApiContact {
+  id: string;
+  name: string;
+  title: string | null;
+  email: string | null;
 }
 
 interface ApiJobApplication {
@@ -20,6 +27,16 @@ interface ApiJobApplication {
   updatedAt: string;
   dateApplied: string;
   company: ApiCompany | null;
+  contacts: ApiContact[];
+}
+
+function mapContact(api: ApiContact): Contact {
+  return {
+    id: api.id,
+    name: api.name,
+    title: api.title ?? undefined,
+    email: api.email ?? undefined,
+  };
 }
 
 // Field names differ deliberately between the two sides (role/company.name
@@ -36,6 +53,7 @@ function mapApplication(api: ApiJobApplication): JobApplication {
     description: api.description ?? undefined,
     updatedAt: api.updatedAt.split("T")[0],
     dateApplied: api.dateApplied.split("T")[0],
+    contacts: api.contacts.map(mapContact),
   };
 }
 
@@ -81,6 +99,28 @@ export async function updateApplicationStage(id: string, stage: ApplicationStage
     body: JSON.stringify({ stage }),
   });
   return mapApplication(await handleResponse<ApiJobApplication>(res));
+}
+
+export async function createContact(
+  applicationId: string,
+  input: { name: string; title?: string; email?: string }
+): Promise<Contact> {
+  const res = await fetch(`/api/applications/${applicationId}/contacts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  return mapContact(await handleResponse<ApiContact>(res));
+}
+
+export async function deleteContact(applicationId: string, contactId: string): Promise<void> {
+  const res = await fetch(`/api/applications/${applicationId}/contacts/${contactId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Request failed (${res.status})`);
+  }
 }
 
 export async function deleteApplication(id: string): Promise<void> {

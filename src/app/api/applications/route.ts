@@ -21,7 +21,7 @@ export async function GET() {
     where: { userId: dbUser.id },
     orderBy: { dateApplied: "desc" },
     take: 100,
-    include: { company: true },
+    include: { company: true, contacts: true },
   });
 
   return NextResponse.json({ data: applications });
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       sourceUrl: body.sourceUrl || null,
       source: body.source || null,
     },
-    include: { company: true },
+    include: { company: true, contacts: true },
   });
 
   return NextResponse.json(application, { status: 201 });

@@ -10,6 +10,7 @@ export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- standard SSR-hydration-safe "mounted" guard (this is next-themes' own documented pattern for custom toggles) — the server can't know the client's theme, so this has to resolve after mount.
     setMounted(true);
   }, []);
 
