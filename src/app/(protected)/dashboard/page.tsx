@@ -7,6 +7,7 @@ import { AddApplicationDialog } from "@/components/AddApplicationDialog";
 import { DeleteApplicationDialog } from "@/components/DeleteApplicationDialog";
 import { StaleApplicationsBanner } from "@/components/StaleApplicationsBanner";
 import { FollowUpDialog } from "@/components/FollowUpDialog";
+import { OnboardingDialog } from "@/components/OnboardingDialog";
 import { fetchApplications, updateApplicationStage } from "@/lib/applicationsApi";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -144,6 +145,8 @@ export default function DashboardPage() {
         onFollowedUp={handleUpdateApplication}
         onAddContact={handleSelectApp}
       />
+
+      <OnboardingDialog />
     </div>
   );
 }

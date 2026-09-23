@@ -49,12 +49,12 @@ export function StaleApplicationsBanner({
         {stale.map(({ app, days }) => (
           <div
             key={app.id}
-            className="flex items-center justify-between gap-2 rounded-md bg-card/60 px-2.5 py-1.5"
+            className="flex items-center justify-between gap-2 rounded-md bg-card/60 px-2.5 py-1.5 transition-colors hover:bg-card"
           >
             <button
               type="button"
               onClick={() => onSelectApplication(app)}
-              className="flex min-w-0 flex-1 items-center gap-1 text-left text-card-foreground hover:underline"
+              className="flex min-w-0 flex-1 items-center gap-1 rounded px-1 -mx-1 text-left text-card-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             >
               <span className="truncate">
                 <span className="font-medium">{app.companyName}</span> — {app.jobTitle}
@@ -66,7 +66,7 @@ export function StaleApplicationsBanner({
               <button
                 type="button"
                 onClick={() => onFollowUpRequest(app)}
-                className="inline-flex items-center gap-1 text-xs text-amber-600 hover:underline dark:text-amber-400"
+                className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-1 text-xs text-amber-600 transition-colors hover:bg-amber-500/20 dark:text-amber-400"
               >
                 <Mail className="size-3" /> Follow up
               </button>

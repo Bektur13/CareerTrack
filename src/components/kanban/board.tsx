@@ -250,7 +250,7 @@ function KanbanCard({
   return (
     <Card
       onClick={onClick}
-      className={`cursor-pointer rounded-lg border border-border bg-card text-card-foreground shadow-sm transition-all hover:border-primary/40 ${
+      className={`cursor-pointer rounded-lg border border-border bg-card text-card-foreground shadow-sm transition-all hover:border-primary/40 hover:bg-accent/40 hover:shadow-md ${
         isDragging ? "scale-105 border-primary/50 shadow-lg" : ""
       }`}
     >

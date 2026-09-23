@@ -2,11 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,21 +33,10 @@ export default function RootLayout({
       >
         <body className="min-h-full">
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-            <TooltipProvider>
-              <SidebarProvider>
-                <AppSidebar />
-                <SidebarInset className="bg-card">
-                  <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-4">
-                    <SidebarTrigger />
-                    <ThemeToggle />
-                  </header>
-                  {children}
-                </SidebarInset>
-              </SidebarProvider>
-            </TooltipProvider>
+            {children}
           </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>
   );
-};
+}
