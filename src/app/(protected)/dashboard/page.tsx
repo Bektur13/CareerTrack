@@ -8,6 +8,7 @@ import { DeleteApplicationDialog } from "@/components/DeleteApplicationDialog";
 import { StaleApplicationsBanner } from "@/components/StaleApplicationsBanner";
 import { FollowUpDialog } from "@/components/FollowUpDialog";
 import { OnboardingDialog } from "@/components/OnboardingDialog";
+import { OfferCelebration } from "@/components/OfferCelebration";
 import { fetchApplications, updateApplicationStage } from "@/lib/applicationsApi";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ export default function DashboardPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [followUpTargetId, setFollowUpTargetId] = useState<string | null>(null);
+  const [celebration, setCelebration] = useState<{ jobTitle: string; companyName: string } | null>(null);
 
   const selectedApp = applications.find((app) => app.id === selectedAppId) ?? null;
   const deleteTarget = applications.find((app) => app.id === deleteTargetId) ?? null;
@@ -50,10 +52,20 @@ export default function DashboardPage() {
     setIsDrawerOpen(true);
   };
 
-  const handleStageChange = async (appId: string, newStage: ApplicationStage) => {
+  const handleStageChange = async (
+    appId: string,
+    newStage: ApplicationStage,
+    previousStage: ApplicationStage
+  ) => {
     try {
       const updated = await updateApplicationStage(appId, newStage);
       setApplications((prev) => prev.map((app) => (app.id === appId ? updated : app)));
+
+      // Only a genuine transition into Offer — not a same-column reorder of
+      // a card that was already there — triggers the celebration.
+      if (newStage === "OFFER" && previousStage !== "OFFER") {
+        setCelebration({ jobTitle: updated.jobTitle, companyName: updated.companyName });
+      }
     } catch (err) {
       console.error("Failed to update stage, resyncing from server:", err);
       fetchApplications().then(setApplications).catch(() => {});
@@ -147,6 +159,13 @@ export default function DashboardPage() {
       />
 
       <OnboardingDialog />
+
+      <OfferCelebration
+        open={celebration !== null}
+        onOpenChange={(open) => !open && setCelebration(null)}
+        jobTitle={celebration?.jobTitle ?? null}
+        companyName={celebration?.companyName ?? null}
+      />
     </div>
   );
 }

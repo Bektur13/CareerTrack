@@ -77,7 +77,7 @@ interface BoardProps {
   applications: JobApplication[];
   onApplicationsChange: (applications: JobApplication[]) => void;
   onApplicationSelect: (app: JobApplication) => void;
-  onStageChange: (appId: string, newStage: ApplicationStage) => void;
+  onStageChange: (appId: string, newStage: ApplicationStage, previousStage: ApplicationStage) => void;
   onDeleteRequest: (app: JobApplication) => void;
 }
 
@@ -131,8 +131,12 @@ export function KanbanBoard({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active } = event;
     const activeItem = applications.find((a) => a.id === active.id);
-    if (activeItem) {
-      onStageChange(activeItem.id, activeItem.stage);
+    // activeApp was captured at drag start and never mutated during the
+    // drag (only handleDragOver's optimistic update touches `applications`),
+    // so its .stage is still the pre-drag value — lets the parent tell a
+    // real stage transition apart from a same-column reorder.
+    if (activeItem && activeApp) {
+      onStageChange(activeItem.id, activeItem.stage, activeApp.stage);
     }
     setActiveApp(null);
   };
