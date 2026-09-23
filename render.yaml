@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: jobtracker-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run server
+    envVars:
+      - key: NODE_VERSION
+        value: 20

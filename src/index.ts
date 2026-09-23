@@ -8,10 +8,12 @@ import { clerkMiddleware } from '@clerk/express';
 const app = express();
 const port = process.env.PORT;
 
+const ALLOWED_ORIGINS = ['http://localhost:3000', 'https://career-track-set.vercel.app'];
+
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin) return callback(null, true);
-        if (origin === 'http://localhost:3000') return callback(null, true);
+        if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
         if (origin.startsWith('chrome-extension://')) return callback(null, true);
         return callback(new Error('Not allowed by CORS'));
     },
